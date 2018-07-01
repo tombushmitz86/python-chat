@@ -88,7 +88,7 @@ class ChatServer:
             last_messages=[message.text],
         )
         welcome_text = (
-                'Welcome to the chat!\n there are currently {} people chatting in this room: {}'
+                'Welcome to the chat!\n there are currently {} people chatting in this room: \n{}'
                 .format(
                     len(self.clients),
                     '\n'.join([c.name for c in self.clients.values()]),

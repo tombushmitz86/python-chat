@@ -47,16 +47,16 @@ class Client:
         asyncio.get_event_loop().run_until_complete(self.connect_to_server(host, port))
 
     async def handle_incoming(self, websocket):
-        while True:
-            print('waiting for a message')
-            message = await websocket.recv()
-            print('got a message')
-            await prompt_text(Message.from_record(message))
+        async for message in websocket:
+            prompt_text(Message.from_record(message))
+
+    async def get_input_from_user(self):
+        text = input('> ')
+        return text
 
     async def handle_outgoing(self, websocket):
         while True:
-            text = input('> ')
-
+            text = await self.get_input_from_user()
             if text == '\q':
                 print('Bye!')
                 websocket.close()
@@ -78,7 +78,7 @@ class Client:
                     self.handle_outgoing(websocket))
                 done, pending = await asyncio.wait(
                     [outgoings_task, incomings_task],
-                    return_when=asyncio.FIRST_COMPLETED,
+                    # return_when=asyncio.FIRST_COMPLETED,
                 )
                 for task in pending:
                     task.cancel()
@@ -86,7 +86,6 @@ class Client:
         # Could be all kinds raised from websockets, but for simplicity we catch all.
         except Exception:
             print(f'Could not connect to server at {host}:{port}')
-            return
 
 
 def main():
@@ -100,11 +99,7 @@ def main():
     )
     username = input('What\'s your name?\n')
 
-    client = Client(host=args.host, port=args.port, username=username)
-
-
-
-
+    Client(host=args.host, port=args.port, username=username)
 
 if __name__ == '__main__':
     main()
