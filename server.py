@@ -15,8 +15,10 @@ logging.basicConfig(
 
 log = logging.getLogger('server')
 
+
 def now():
     return datetime.datetime.now().isoformat()
+
 
 class Message:
 
@@ -65,13 +67,6 @@ class ChatServer:
             print("sending to client")
             await client.send(message.to_record())
 
-    async def handle_outgoing(websocket):
-            await websocket.send(Message(
-                    text=text,
-                    timestamp=now(),
-                    username='tom',
-                ).deserialize())
-
     async def handle_user_left(self, websocket):
         message = Message(
             text='{} has left the chat'.format(self.clients[websocket].name),
@@ -104,7 +99,9 @@ class ChatServer:
             timestamp=now(),
             username="admin",
         )
+
         await websocket.send(greet_message.to_record())
+
         log.info('{} has joined the chat'.format(client.name))
         await self.send_to_all(Message(
             username='admin',
@@ -116,12 +113,16 @@ class ChatServer:
 
     # Handle a connection from a single client.
     async def handle_messages(self, websocket, path):
-        async for _incoming_message in websocket:
-            if websocket not in self.clients:
-                await self.handle_new_user(websocket, _incoming_message)
+        try:
+            async for _incoming_message in websocket:
+                if websocket not in self.clients:
+                    await self.handle_new_user(websocket, _incoming_message)
 
-            message = Message.from_record(_incoming_message)
-            await self.send_to_all(message)
+                message = Message.from_record(_incoming_message)
+                await self.send_to_all(message)
+        except websockets.exceptions.ConnectionClosed:
+            await self.handle_user_left(websocket)
+            return
 
         await self.handle_user_left(websocket)
 

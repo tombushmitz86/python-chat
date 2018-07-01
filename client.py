@@ -1,7 +1,6 @@
 import websockets
 import asyncio
 import argparse
-import attr
 import json
 import datetime
 
@@ -35,20 +34,26 @@ class Message:
         })
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-H", "--host", type=str, help="server address")
-    parser.add_argument("-p", "--port", type=int, help="server port")
-    args = parser.parse_args()
+def prompt_text(message):
+    print('{0.timestamp} {0.username} > {0.text}'.format(message))
 
-    def prompt_text(message):
-        print('{0.timestamp} {0.username} > {0.text}'.format(message))
 
-    async def handle_incoming(websocket):
-        async for message in websocket:
+class Client:
+    def __init__(self, host, port, username):
+        self.host = host
+        self.port = port
+        self.username = username
+
+        asyncio.get_event_loop().run_until_complete(self.connect_to_server(host, port))
+
+    async def handle_incoming(self, websocket):
+        while True:
+            print('waiting for a message')
+            message = await websocket.recv()
+            print('got a message')
             await prompt_text(Message.from_record(message))
 
-    async def handle_outgoing(websocket):
+    async def handle_outgoing(self, websocket):
         while True:
             text = input('> ')
 
@@ -60,35 +65,45 @@ def main():
             await websocket.send(Message(
                 text=text,
                 timestamp=now(),
-                username='tom',
+                username=self.username,
             ).to_record())
 
-    async def connect_to_server(host, port):
-        # try:
-        async with websockets.connect(f'ws://{host}:{port}') as websocket:
-            print(
-                'Welcome to the lonliest chat room in the world....\n' \
-                'enter \'\q\' to quit the room',
-            )
-            username = input('What\'s your name?\n')
+    async def connect_to_server(self, host, port):
+        try:
+            async with websockets.connect(f'ws://{host}:{port}') as websocket:
 
-            incomings_task = asyncio.ensure_future(
-                handle_incoming(websocket))
-            outgoings_task = asyncio.ensure_future(
-                handle_outgoing(websocket))
-            done, pending = await asyncio.wait(
-                [outgoings_task, incomings_task],
-                return_when=asyncio.FIRST_COMPLETED,
-            )
-            for task in pending:
-                task.cancel()
+                incomings_task = asyncio.ensure_future(
+                    self.handle_incoming(websocket))
+                outgoings_task = asyncio.ensure_future(
+                    self.handle_outgoing(websocket))
+                done, pending = await asyncio.wait(
+                    [outgoings_task, incomings_task],
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+                for task in pending:
+                    task.cancel()
 
         # Could be all kinds raised from websockets, but for simplicity we catch all.
-        # except Exception:
-            # print(f'Could not connect to server at {host}:{port}')
-            # return
+        except Exception:
+            print(f'Could not connect to server at {host}:{port}')
+            return
 
-    asyncio.get_event_loop().run_until_complete(connect_to_server(args.host, args.port))
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-H", "--host", type=str, help="server address")
+    parser.add_argument("-p", "--port", type=int, help="server port")
+    args = parser.parse_args()
+    print(
+        'Welcome to the lonliest chat room in the world....\n' \
+        'enter \'\q\' to quit the room',
+    )
+    username = input('What\'s your name?\n')
+
+    client = Client(host=args.host, port=args.port, username=username)
+
+
+
 
 
 if __name__ == '__main__':

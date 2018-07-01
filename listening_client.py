@@ -58,9 +58,11 @@ def main():
                 timestamp=now(),
                 username=username,
             ).to_record())
-
-            async for message in websocket:
-                await prompt_text(Message.from_record(message))
+            while True:
+                message = await websocket.recv()
+                prompt_text(Message.from_record(message))
+            #  async for message in websocket:
+            #     await prompt_text(Message.from_record(message))
 
         # Could be all kinds raised from websockets, but for simplicity we catch all.
         # except Exception:
