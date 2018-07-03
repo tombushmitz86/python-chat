@@ -44,7 +44,11 @@ class Client:
         self.port = port
         self.username = username
 
-        asyncio.get_event_loop().run_until_complete(self.connect_to_server(host, port))
+        asyncio.get_event_loop().run_until_complete(
+            self.connect_to_server(
+                host,
+                port,
+            ))
 
     async def handle_incoming(self, websocket):
         while True:
@@ -83,7 +87,8 @@ class Client:
                 for task in pending:
                     task.cancel()
 
-        # Could be all kinds raised from websockets, but for simplicity we catch all.
+        # Could be all kinds raised from websockets,
+        # but for simplicity we catch all.
         except Exception:
             print(f'Could not connect to server at {host}:{port}')
             return
@@ -95,15 +100,12 @@ def main():
     parser.add_argument("-p", "--port", type=int, help="server port")
     args = parser.parse_args()
     print(
-        'Welcome to the lonliest chat room in the world....\n' \
+        'Welcome to the lonliest chat room in the world....\n'
         'enter \'\q\' to quit the room',
     )
     username = input('What\'s your name?\n')
 
-    client = Client(host=args.host, port=args.port, username=username)
-
-
-
+    Client(host=args.host, port=args.port, username=username)
 
 
 if __name__ == '__main__':

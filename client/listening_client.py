@@ -1,7 +1,6 @@
 import websockets
 import asyncio
 import argparse
-import attr
 import json
 import datetime
 
@@ -45,31 +44,34 @@ def main():
         print('{0.timestamp} {0.username} > {0.text}'.format(message))
 
     async def connect_to_server(host, port):
-        # try:
-        async with websockets.connect(f'ws://{host}:{port}') as websocket:
-            print(
-                'Welcome to the lonliest chat room in the world....\n' \
-                'enter \'\q\' to quit the room',
-            )
-            username = input('What\'s your name?\n')
+        try:
+            async with websockets.connect(f'ws://{host}:{port}') as websocket:
+                print(
+                    'Welcome to the lonliest chat room in the world....\n'
+                    'enter \'\q\' to quit the room',
+                )
+                username = input('What\'s your name?\n')
 
-            await websocket.send(Message(
-                text="just something",
-                timestamp=now(),
-                username=username,
-            ).to_record())
-            while True:
-                message = await websocket.recv()
-                prompt_text(Message.from_record(message))
-            #  async for message in websocket:
-            #     await prompt_text(Message.from_record(message))
+                await websocket.send(Message(
+                    text="just something",
+                    timestamp=now(),
+                    username=username,
+                ).to_record())
+                while True:
+                    message = await websocket.recv()
+                    prompt_text(Message.from_record(message))
+                #  async for message in websocket:
+                #     await prompt_text(Message.from_record(message))
 
-        # Could be all kinds raised from websockets, but for simplicity we catch all.
-        # except Exception:
-            # print(f'Could not connect to server at {host}:{port}')
-            # return
+        # Could be all kinds raised from websockets,
+        #  but for simplicity we catch all.
+        except Exception:
+            print(f'Could not connect to server at {host}:{port}')
+            return
 
-    asyncio.get_event_loop().run_until_complete(connect_to_server(args.host, args.port))
+    asyncio.get_event_loop().run_until_complete(
+        connect_to_server(args.host, args.port),
+    )
 
 
 if __name__ == '__main__':

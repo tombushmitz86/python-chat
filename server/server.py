@@ -88,7 +88,8 @@ class ChatServer:
             last_messages=[message.text],
         )
         welcome_text = (
-                'Welcome to the chat!\n there are currently {} people chatting in this room: {}'
+                'Welcome to the chat!\n there are currently {}'
+                'people chatting in this room: {}'
                 .format(
                     len(self.clients),
                     '\n'.join([c.name for c in self.clients.values()]),
@@ -131,9 +132,23 @@ class ChatServer:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-H", "--host", default='0.0.0.0', help="host to serve from")
-    parser.add_argument("-p", "--port", default=3030, help="port to serve on")
-    parser.add_argument("-v", "--verbosity", action="count", default=0)
+    parser.add_argument(
+        "-H", "--host",
+        default='0.0.0.0',
+        help="host to serve from",
+    )
+    parser.add_argument(
+        "-p",
+        "--port",
+        default=3030,
+        help="port to serve on",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        action="count",
+        default=0,
+    )
     args = parser.parse_args()
 
     server = ChatServer(args.host, args.port)
