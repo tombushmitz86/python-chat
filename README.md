@@ -1,5 +1,7 @@
 # Python client-server chat WebSockets based
 
+### requirements
+python >= 3.6
 ## init
 run ```make init``` on project root
 
