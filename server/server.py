@@ -113,6 +113,7 @@ class ChatServer:
 
     # Handle a connection from a single client.
     async def handle_messages(self, websocket, path):
+        log.info('connection established from {}'.format(websocket.origin))
         try:
             async for _incoming_message in websocket:
                 if websocket not in self.clients:
@@ -121,7 +122,8 @@ class ChatServer:
                 message = Message.from_record(_incoming_message)
                 await self.send_to_all(message)
         except websockets.exceptions.ConnectionClosed:
-            await self.handle_user_left(websocket)
+            if websocket in self.clients:
+                await self.handle_user_left(websocket)
             return
 
         await self.handle_user_left(websocket)
